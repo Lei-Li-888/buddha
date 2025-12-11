@@ -110,3 +110,61 @@ speedBtn.addEventListener("click", () => {
     audio.playbackRate = speeds[speedIndex];
     speedBtn.textContent = speeds[speedIndex] + "x";
 });
+/*adding function 12-11*/
+function loadTrack(index) {
+    const track = tracks[index];
+    if (!track) return;
+
+    const src = track.dataset.src;
+    const title = track.querySelector('.track-title').textContent;
+    const desc = track.querySelector('.track-desc').textContent;
+
+    audio.src = src;
+    currentIndex = index;
+    playerTitle.textContent = title;
+    playerSub.textContent = desc;
+    setActiveTrack(index);
+
+    // 1. 设置 Media Session（锁屏信息）
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: title,
+            artist: '静听经声',
+            album: '佛经诵读',
+            artwork: [
+                { src: 'https://via.placeholder.com/256', sizes: '256x256', type: 'image/png' }
+            ]
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => audio.play());
+        navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+            if (currentIndex <= 0) {
+                loadTrack(tracks.length - 1);
+            } else {
+                loadTrack(currentIndex - 1);
+            }
+        });
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+            if (currentIndex >= tracks.length - 1 || currentIndex === -1) {
+                loadTrack(0);
+            } else {
+                loadTrack(currentIndex + 1);
+            }
+        });
+    }
+
+    // 2. 播放
+    audio.load();
+    audio.play()
+        .then(() => {
+            isPlaying = true;
+            playPauseBtn.textContent = '⏸';
+        })
+        .catch(err => {
+            console.log('play 被拦截：', err);
+            isPlaying = false;
+            playPauseBtn.textContent = '▶';
+        });
+}
+
