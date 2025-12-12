@@ -110,7 +110,7 @@ speedBtn.addEventListener("click", () => {
     audio.playbackRate = speeds[speedIndex];
     speedBtn.textContent = speeds[speedIndex] + "x";
 });
-/*adding function 12-11*/
+/*adding function 12-11-2025 v2*/
 function loadTrack(index) {
     const track = tracks[index];
     if (!track) return;
@@ -118,14 +118,19 @@ function loadTrack(index) {
     const src = track.dataset.src;
     const title = track.querySelector('.track-title').textContent;
     const desc = track.querySelector('.track-desc').textContent;
+    const sutraId = track.dataset.sutraId;
 
+    // 更新经文
+    updateSutra(sutraId, title);
+
+    // 设置音频源
     audio.src = src;
     currentIndex = index;
     playerTitle.textContent = title;
     playerSub.textContent = desc;
     setActiveTrack(index);
 
-    // 1. 设置 Media Session（锁屏信息）
+    // ★★ 重点：这里设置 Media Session ★★
     if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
             title: title,
@@ -136,35 +141,30 @@ function loadTrack(index) {
             ]
         });
 
+        // 可选：让锁屏上的按钮能控制播放
         navigator.mediaSession.setActionHandler('play', () => audio.play());
         navigator.mediaSession.setActionHandler('pause', () => audio.pause());
         navigator.mediaSession.setActionHandler('previoustrack', () => {
-            if (currentIndex <= 0) {
-                loadTrack(tracks.length - 1);
-            } else {
-                loadTrack(currentIndex - 1);
-            }
+            if (currentIndex <= 0) loadTrack(tracks.length - 1);
+            else loadTrack(currentIndex - 1);
         });
         navigator.mediaSession.setActionHandler('nexttrack', () => {
-            if (currentIndex >= tracks.length - 1 || currentIndex === -1) {
-                loadTrack(0);
-            } else {
-                loadTrack(currentIndex + 1);
-            }
+            if (currentIndex >= tracks.length - 1 || currentIndex === -1) loadTrack(0);
+            else loadTrack(currentIndex + 1);
         });
     }
 
-    // 2. 播放
+    // 开始播放
     audio.load();
     audio.play()
         .then(() => {
             isPlaying = true;
             playPauseBtn.textContent = '⏸';
+            console.log('🔊 play started, mediaSession set');
         })
         .catch(err => {
-            console.log('play 被拦截：', err);
+            console.log('play 被拦截或失败：', err);
             isPlaying = false;
             playPauseBtn.textContent = '▶';
         });
 }
-
